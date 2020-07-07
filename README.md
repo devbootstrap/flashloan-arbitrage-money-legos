@@ -57,4 +57,4 @@ ts-node src/execFlashloanMoneyLego.ts
 
 ### Verify
 
-Confirm the transaction output in [Kovan Etherscan](https://kovan.etherscan.io/tx/0xd1f185891e338883852981e3f34e09e1e283b58eae4fc3b3ee5b48d18915113d).
+Confirm the transaction output in [Kovan Etherscan](https://kovan.etherscan.io/tx/0x651eebdec190636d6b70bc2a349243735a265e0431ae8a62b28ed9127281e8e3).
