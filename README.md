@@ -25,7 +25,7 @@ compile
 migrate --reset
 ```
 
-### Interact
+### Interact via Truffle Console
 
 Interact with the contract via the truffle console:
 
@@ -36,6 +36,23 @@ let amountToLoan = web3.utils.toWei('1') // 1 'unit' of the 'assetToFlashLoan' (
 Object.keys(f)
 f.addressesProvider()
 f.initateFlashLoan(assetToFlashLoan, amountToLoan)
+```
+
+### Interact via Typescript app
+
+There is a Typescript file that runs the same above arbitrage. This can be run as folllows.
+
+Install Typescript and `ts-node`
+
+```
+npm install -g typescript
+npm install -g ts-node
+```
+
+Now run the script as follows:
+
+```
+ts-node src/execFlashloanMoneyLego.ts
 ```
 
 ### Verify

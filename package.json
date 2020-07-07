@@ -12,6 +12,7 @@
   "devDependencies": {
     "@truffle/hdwallet-provider": "^1.0.37",
     "dotenv": "^8.2.0",
+    "ethers": "^5.0.4",
     "truffle": "^5.1.32"
   },
   "scripts": {
