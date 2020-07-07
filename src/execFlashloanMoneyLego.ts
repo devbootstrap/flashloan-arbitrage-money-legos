@@ -25,12 +25,16 @@ legos.erc20.dai.address = kovan.erc20.dai.address;
 const main = async () => {
   const tx = await contractFlashloanMoneyLego.initateFlashLoan(
     legos.erc20.dai.address, // We would like to borrow DAI (note override to Kovan address)
-    ethers.utils.parseEther("1"), // We would like to borrow 1 DAI (in 18 decimals)
+    ethers.utils.parseEther("1000"), // We would like to borrow 1000 DAI (in 18 decimals)
     { gasLimit: 4000000, },
   );
   // Inspect the issued transaction
   console.log(tx);
-  await tx.wait()
+  let receipt = await tx.wait();
+  // Inspect the transaction receipt
+  console.log(receipt);
+  // Inspect the transaction hash
+  console.log("Tx Hash: ", receipt.transactionHash);
 };
 
 // Run the arbitrage and output the result or error

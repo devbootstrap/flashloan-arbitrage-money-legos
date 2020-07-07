@@ -20,6 +20,8 @@ contract FlashloanMoneyLego is FlashLoanReceiverBase {
     IUniswapFactory public uniswapFactoryA;
     IUniswapFactory public uniswapFactoryB;
     IUniswapExchange public exchangeAforLoanAsset;
+    IUniswapExchange public exchangeBforLoanAsset;
+    IUniswapExchange public exchangeAforBAT;
     IUniswapExchange public exchangeBforBAT;
 
     constructor() public {
@@ -33,9 +35,11 @@ contract FlashloanMoneyLego is FlashLoanReceiverBase {
       uniswapFactoryB = IUniswapFactory(UNISWAP_FACTORY_B);
 
       // get Exchange B Address
-      address exchangeAddressBAT = uniswapFactoryB.getExchange(BAT_ADDRESS);
+      address addressForBATExchangeA = uniswapFactoryA.getExchange(BAT_ADDRESS);
+      address addressForBATExchangeB = uniswapFactoryB.getExchange(BAT_ADDRESS);
       // Instantiate Exchange B for BAT Token swaps
-      exchangeBforBAT = IUniswapExchange(exchangeAddressBAT);
+      exchangeAforBAT = IUniswapExchange(addressForBATExchangeA);
+      exchangeBforBAT = IUniswapExchange(addressForBATExchangeB);
     }
 
     function executeOperation(
@@ -50,17 +54,19 @@ contract FlashloanMoneyLego is FlashLoanReceiverBase {
         uint256 deadline = now + 3000;
 
         // get Exchange Address for the reserve asset
-        address exchangeAddressforLoanAsset = uniswapFactoryA.getExchange(RESERVE_ADDRESS);
+        address addressForLoanAssetExchangeA = uniswapFactoryA.getExchange(RESERVE_ADDRESS);
+        address addressForLoanAssetExchangeB = uniswapFactoryB.getExchange(RESERVE_ADDRESS);
         // Instantiate Exchange A
-        exchangeAforLoanAsset = IUniswapExchange(exchangeAddressforLoanAsset);
+        exchangeAforLoanAsset = IUniswapExchange(addressForLoanAssetExchangeA);
+        exchangeBforLoanAsset = IUniswapExchange(addressForLoanAssetExchangeB);
 
         IERC20 loan = IERC20(RESERVE_ADDRESS);
         IERC20 bat = IERC20(BAT_ADDRESS);
 
         // Swap the reserve asset (e.g. DAI) for BAT
-        require(loan.approve(address(exchangeAforLoanAsset), _amount), "Could not approve reserve asset sell");
+        require(loan.approve(address(exchangeBforLoanAsset), _amount), "Could not approve reserve asset sell");
 
-        uint256 batPurchased = exchangeAforLoanAsset.tokenToTokenSwapInput(
+        uint256 batPurchased = exchangeBforLoanAsset.tokenToTokenSwapInput(
             _amount,
             1,
             1,
@@ -68,10 +74,10 @@ contract FlashloanMoneyLego is FlashLoanReceiverBase {
             BAT_ADDRESS
         );
 
-        require(bat.approve(address(exchangeBforBAT), batPurchased), "Could not approve BAT asset sell");
+        require(bat.approve(address(exchangeAforBAT), batPurchased), "Could not approve BAT asset sell");
 
-        // Swap BAT back to the reserve asset
-        uint256 reserveAssetPurchased = exchangeBforBAT.tokenToTokenSwapInput(
+        // Swap BAT back to the reserve asset (e.g. DAIs)
+        uint256 reserveAssetPurchased = exchangeAforBAT.tokenToTokenSwapInput(
             batPurchased,
             1,
             1,
@@ -79,11 +85,13 @@ contract FlashloanMoneyLego is FlashLoanReceiverBase {
             RESERVE_ADDRESS
         );
 
-        uint totalDebt = _amount.add(_fee);
+        uint amount = _amount;
+
+        uint totalDebt = amount.add(_fee);
 
         require(reserveAssetPurchased > totalDebt, "There is no profit! Reverting!");
 
-        transferFundsBackToPoolInternal(RESERVE_ADDRESS, _amount.add(_fee));
+        transferFundsBackToPoolInternal(RESERVE_ADDRESS, amount.add(_fee));
     }
 
     // Entry point for flashloan
@@ -96,6 +104,8 @@ contract FlashloanMoneyLego is FlashLoanReceiverBase {
         // Get Aave lending pool
         ILendingPool lendingPool = ILendingPool(addressesProvider.getLendingPool());
 
+        IERC20 loan = IERC20(assetToFlashLoan);
+
         // Ask for a flashloan
         lendingPool.flashLoan(
             address(this),
@@ -103,5 +113,9 @@ contract FlashloanMoneyLego is FlashLoanReceiverBase {
             amountToLoan,
             data
         );
+
+        // If there is still a balance of the loan asset then this is profit to be returned to sender!
+        uint256 profit = loan.balanceOf(address(this));
+        require(loan.transfer(msg.sender, profit), "Could not transfer back the profit");
     }
 }
