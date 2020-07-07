@@ -1,0 +1,30 @@
+{
+  "name": "flashloan-money-legos",
+  "version": "1.0.0",
+  "description": "A flashloan example using Money Legos",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@studydefi/money-legos": "^2.3.5"
+  },
+  "devDependencies": {
+    "@truffle/hdwallet-provider": "^1.0.37",
+    "dotenv": "^8.2.0",
+    "truffle": "^5.1.32"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "keywords": [
+    "defi",
+    "swaps",
+    "flashloan",
+    "money-lego",
+    "dex",
+    "trading"
+  ],
+  "author": "Darren Jensen",
+  "license": "ISC"
+}
